@@ -1,5 +1,10 @@
 var _ = require("underscore");
-// XXX need to sanitize name record on return with a _.pick. Don't want creationDate or modificationDate.
+
+function processError(res, err) {
+    console.log(err.message);
+    res.status(500);
+    res.json({ message: err.message });
+}
 
 var names = {
 
@@ -7,78 +12,105 @@ var names = {
         var db = app.get("db");
         try {
             db.run("select * from names", function(err, names) {
-                if (err) throw(err);
-                // HATEOS Decorate with links
-                for (name in names) {
-                    name.links = [ {
-                        "rel": "self",
-                        "href": req.baseURL + "/v1/api/name/:" + name.name_id
-                    }];
-                }
+                if (err) return processError(res, err);
+                res.status(200);
                 res.json({
-                    content: names,
-                    links: [{
-                        rel: "name.search",
-                        href: req.baseURL + "/v1/api/name/search"
-                    }]
+                    length: names.length,
+                    content: names
                 });
             });
         } catch (e) {
-            console.log("ERROR: " + e);
-            res.status(500);
-            res.json(e);
+            processError(res, e);
         }
     },
 
     getOne: function(req, res) {
         var db = app.get("db");
-        try {   // XXX probably don't want to search by ID but by name, need a different protocol.
-            db.names.findOne({ name: req.params.id }, function(err, name) {
-                if (err) throw(err);
-                res.json(name);
+        try {
+            db.names.findOne({ name_id: req.params.id }, function(err, name) {
+                if (err) return processError(res, err);
+                res.status(200);
+                res.json({
+                    length: 1,
+                    content: [ name ]
+                });
             });
         } catch (e) {
-            console.log("ERROR: " + e);
-            res.status(500);
-            res.json(e);
+            processError(res, e);
         }
+    },
+
+    search: function(req, res) {
+            var db = app.get("db");
+            try {
+                db.run("SELECT * FROM Names WHERE Name ILIKE '%" + req.query.name + "%'", function(err, names) {
+                    if (err) return processError(res, err);
+                    res.status(200);
+                    res.json({
+                        length: names.length,
+                        content: names
+                    });
+                });
+            } catch (e) {
+                processError(res, e);
+            }
     },
 
     create: function(req, res) {
         var db = app.get("db");
         try {
             var attributes = [ "name", "meaning", "scripture" ];
-            var pick = _.pick(req.body, attributes);
-            if (_.keys(pick).length != attributes.length) { // Need all
+            var name = _.pick(req.body, attributes);
+            if (_.keys(name).length != attributes.length) { // Need all
                 res.status(400);
-                res.json({ "message": "Missing attribute for name"})
+                res.json({ "message": "Missing one or more required attributes for name record: " + attributes });
                 return;
             }
 
-            db.names.save(pick, function(err, pick) {
-                if (err) throw(err);
+            db.names.save(name, function(err, name) {
+                if (err) return processError(res, err);
                 res.status(201); // Created
-                res.json(pick);
+                res.json({
+                    length: 1,
+                    content: [ name ]
+                });
             });
         } catch (e) {
-            console.log("ERROR: " + e);
-            res.status(500);
-            res.json(e);
-            return;
+            processError(res, e);
         }
     },
 
     update: function(req, res) {
-        var updateuser = req.body;
-        var id = req.params.id;
-        data[id] = updateuser // Spoof a DB call
-        res.json(updateuser);
+        var db = app.get("db");
+        try {
+            var attributes = [ "name", "meaning", "scripture" ];
+            var name = _.pick(req.body, attributes);
+            name.name_id = req.params.id;
+            name.modificationDate = new Date();
+            db.names.update(name, function(err, name) {
+                if (err) return processError(res, err);
+                res.status(200); // Created
+                res.json({
+                    length: 1,
+                    content: [ name ]
+                });
+            });
+        } catch (e) {
+            processError(res, e);
+        }
     },
 
     delete: function(req, res) {
-        var id = req.params.id;
-        data.splice(id, 1) // Spoof a DB call
-        res.json(true);
+        var db = app.get("db");
+        try {
+            db.names.delete(req.params.id, function(err, pick) {
+                if (err) return processError(res, err);
+                res.status(200); // Deleted
+                res.json(pick);
+            });
+        } catch (e) {
+            processError(res, e);
+        }
     }
 };
 
