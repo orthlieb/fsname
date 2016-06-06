@@ -4,3 +4,4 @@ server/config/secret.js
 server/setup
 server/tests
 ui/node_modules
+node-simplecrawler
