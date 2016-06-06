@@ -18,10 +18,11 @@ router.put('/api/v1/product/:id', products.update);
 router.delete('/api/v1/product/:id', products.delete);
 
 router.get('/api/v1/names', names.getAll);
-router.get('/api/v1/name/search', names.search);
-router.get('/api/v1/name/:id', names.getOne);
-router.post('/api/v1/admin/name/', names.create);   // Secure
-router.put('/api/v1/admin/name/:id', names.update); // Secure
+router.get('/api/v1/names/:id', names.getOne);
+router.post('/api/v1/names/', names.create);
+router.put('/api/v1/names/:id', names.update);
+router.put('/api/v1/names', names.update);
+router.delete('/api/v1/names/:id', names.delete);
 
 /*
 * Routes that can be accessed only by authenticated & authorized users
