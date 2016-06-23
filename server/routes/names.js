@@ -18,13 +18,28 @@ var names = {
                 // Create a WHERE clause if there are any filters
                 try {
                     var filters = JSON.parse(req.query._filters);
-                    var attributes = [ "name", "meaning", "scripture" ];
+                    var attributes = {
+                        name: 'string',
+                        meaning: 'string',
+                        scripture: 'string',
+                        gender: 'integer'
+                    };
                     var where = "";
-                    filters = _.pick(filters, attributes);
-                    for (key in filters)
-                        where += key + " ILIKE '%" + filters[key] + "%' AND ";
-                    if (where)
+                    console.log('FILTERS JSON: ', filters);
+                    filters = _.pick(filters, _.keys(attributes));
+                    console.log('FILTERS JSON: ', filters);
+                    for (key in filters) {
+                        console.log('KEY: ', key, attributes[key]);
+                        if (attributes[key] == 'string')
+                            where += key + " ILIKE '%" + filters[key] + "%' AND ";
+                        else if (attributes[key] == 'integer')
+                            where += key + " = " + filters[key] + " AND ";
+                    }
+
+                    if (where) {
                         query += "WHERE " + where.slice(0, where.indexOf("AND "));   // Lop off the last AND
+                        console.log('FILTER: ' + query);
+                    }
                 } catch (err) {
                     processError(res, err);
                     return;
@@ -66,7 +81,7 @@ var names = {
     create: function(req, res) {
         var db = app.get("db");
         try {
-            var attributes = [ "name", "meaning", "scripture" ];
+            var attributes = [ "name", "meaning", "scripture", "gender" ];
             var name = _.pick(req.body, attributes);
             if (_.keys(name).length != attributes.length) { // Need all
                 res.status(400);
@@ -87,7 +102,7 @@ var names = {
     update: function(req, res) {
         var db = app.get("db");
         try {
-            var attributes = [ "id", "name", "meaning", "scripture" ];
+            var attributes = [ "id", "name", "meaning", "scripture", "gender" ];
             var name = _.pick(req.body, attributes);
             name.id = name.id ? name.id : req.params.id;
             name.modificationdate = new Date();

@@ -1,7 +1,8 @@
 data
-server/node_modules
 server/config/secret.js
 server/setup
 server/tests
 ui/node_modules
 node-simplecrawler
+getnames/behindthename.com
+*/node_modules

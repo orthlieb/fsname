@@ -13,18 +13,30 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
     names.listView().fields([
         nga.field('id'),
         nga.field('name').isDetailLink(true),
+        nga.field('gender', 'choice').choices([
+            { value: 0, label: 'male' },
+            { value: 1, label: 'female' },
+        ]),
         nga.field('meaning'),
         nga.field('scripture'),
         nga.field('creationdate', 'datetime').label('Created'),
         nga.field('modificationdate', 'datetime').label('Last Modified')
     ]);
     names.listView().filters([
-        nga.field('name'),
+        nga.field('name').pinned(true),
+        nga.field('gender', 'choice').choices([
+            { value: 0, label: 'male' },
+            { value: 1, label: 'female' },
+        ]),
         nga.field('meaning'),
         nga.field('scripture')
     ]);
     names.creationView().fields([
         nga.field('name'),
+        nga.field('gender', 'choice').choices([
+            { value: 0, label: 'male' },
+            { value: 1, label: 'female' },
+        ]),
         nga.field('meaning'),
         nga.field('scripture')
     ]);
@@ -32,8 +44,9 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
     names.editionView().fields(names.creationView().fields());
     //names.editionView().title('Edit "{{ names.values.name }}"');
 
-    // add the user entity to the admin application
+    // add the names entity to the admin application
     admin.addEntity(names);
+
     // attach the admin application to the DOM and execute it
     nga.configure(admin);
 }]);

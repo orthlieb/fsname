@@ -1,0 +1,19 @@
+{
+  "name": "processNames",
+  "version": "1.0.0",
+  "description": "HTML processing tool to extract name information",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Carl Orthlieb",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^0.20.0",
+    "cli": "^0.11.2",
+    "commander": "^2.9.0",
+    "html-entities": "^1.2.0",
+    "node-dir": "^0.1.12",
+    "underscore": "^1.8.3"
+  }
+}

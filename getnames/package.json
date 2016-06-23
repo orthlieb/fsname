@@ -1,0 +1,15 @@
+{
+  "name": "getnames",
+  "version": "1.0.0",
+  "description": "Name Spider",
+  "main": "savetodisk.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Carl Orthlieb",
+  "license": "ISC",
+  "dependencies": {
+    "node-fs": "^0.1.7",
+    "simplecrawler": "^0.7.0"
+  }
+}
