@@ -11,7 +11,7 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
     var names = nga.entity('names');
     // set the fields of the name entity list view
     names.listView().fields([
-        nga.field('id'),
+//        nga.field('id'),
         nga.field('name').isDetailLink(true),
         nga.field('gender', 'choice').choices([
             { value: 0, label: 'male' },

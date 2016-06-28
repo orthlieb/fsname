@@ -13,7 +13,7 @@ var names = {
     getAll: function(req, res) {
         var db = app.get("db");
         try {
-            var query = "SELECT * FROM names ";
+            var query = " FROM names ";
             if (req.query._filters) {
                 // Create a WHERE clause if there are any filters
                 try {
@@ -25,11 +25,8 @@ var names = {
                         gender: 'integer'
                     };
                     var where = "";
-                    console.log('FILTERS JSON: ', filters);
                     filters = _.pick(filters, _.keys(attributes));
-                    console.log('FILTERS JSON: ', filters);
                     for (key in filters) {
-                        console.log('KEY: ', key, attributes[key]);
                         if (attributes[key] == 'string')
                             where += key + " ILIKE '%" + filters[key] + "%' AND ";
                         else if (attributes[key] == 'integer')
@@ -38,27 +35,42 @@ var names = {
 
                     if (where) {
                         query += "WHERE " + where.slice(0, where.indexOf("AND "));   // Lop off the last AND
-                        console.log('FILTER: ' + query);
                     }
                 } catch (err) {
                     processError(res, err);
                     return;
                 }
             }
-            if (req.query._sortField && req.query._sortDir) {
-                // Create ORDER BY clause if the sortField or sortDirection is specified
-                query += req.query._sortField ? "ORDER BY " + req.query._sortField + " " : "";
-                query += req.query._sortDir ? req.query._sortDir + " " : "";
-            }
-            if (req.query._perPage && req.query._page) {
-                // Create OFFSET and LIMIT clauses if the perPage and page is specified
-                query += "OFFSET " + ((req.query._page - 1) * req.query._perPage) + " LIMIT " + req.query._perPage;
-            }
-            query += ";";
-            db.run(query, function(err, names) {
+
+            // Now we have a query that will handle our filtered set. We
+            // need to know how many total rows in the set so that we command
+            // can paginate. There's probably a better way to do this but I'm
+            // no SQL guru, so we'll issue two queries, one to get the total
+            // count and the other to actually get the page.
+            console.log("SELECT COUNT(id)" + query);
+            db.run("SELECT COUNT(id)" + query, function (err, count) {
                 if (err) return processError(res, err);
-                res.status(200);
-                res.json(_.isArray(names) ? names : [ names ]);
+                count = count[0].count;
+
+                if (req.query._sortField && req.query._sortDir) {
+                    // Create ORDER BY clause if the sortField or sortDirection is specified
+                    query += req.query._sortField ? "ORDER BY " + req.query._sortField + " " : "";
+                    query += req.query._sortDir ? req.query._sortDir + " " : "";
+                }
+
+                if (req.query._perPage && req.query._page) {
+                    // Create OFFSET and LIMIT clauses if the perPage and page is specified
+                    query += "OFFSET " + ((req.query._page - 1) * req.query._perPage) + " LIMIT " + req.query._perPage;
+                }
+                query += ";";
+                console.log("SELECT *" + query);
+                db.run("SELECT *" + query, function(err, names) {
+                    if (err) return processError(res, err);
+                    res.status(200);
+                    res.append('x-total-count', count);
+                    res.append('Access-Control-Expose-Headers', 'x-total-count');
+                    res.json(_.isArray(names) ? names : [ names ]);
+                });
             });
         } catch (e) {
             processError(res, e);
